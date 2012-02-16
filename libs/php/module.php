@@ -39,8 +39,9 @@ function check_in_table($table,$param,$var){	// returns 1 if $param with $var va
 }
 
 function reg_user($arr){
+	$date=get_date();
 	$arr['password']=md5($arr['password']);
-	db_query("INSERT INTO mips_users VALUES(NULL,'$arr[device_id]','$arr[fname]','$arr[lname]','$arr[username]','$arr[password]','$arr[email]','$arr[tel]',NULL)");
+	db_query("INSERT INTO mips_users VALUES(NULL,'$arr[name]','$arr[nickname]','$arr[email]','$arr[password]','$arr[cellphone]','$date',NULL)");
 }
 
 function update_user($arr){
