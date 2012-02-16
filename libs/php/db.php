@@ -32,8 +32,8 @@ function db_query($q){
 function db_fetch_array($query){
 	if(!@mysql_num_rows($query)) return false;
 	$rows = array();
-	while($arr = mysql_fetch_array($query,MYSQL_ASSOC)){
-		$rows[]=$arr;
+	while($row = mysql_fetch_array($query,MYSQL_ASSOC)){
+		$rows[]=$row;
 	}
 	return $rows;
 }

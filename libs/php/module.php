@@ -5,6 +5,7 @@ require_once('db.php');
 
 function initialize(){
 	db_connect();
+	session_start();
 }
 
 class validate {

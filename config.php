@@ -16,6 +16,7 @@ $db = array(
 	'server' => '127.0.0.1',
 	'name'	=>	'mips_db',
 	'user'	=>	'root',
-	'pass'	=>	''
+	'pass'	=>	'',
+	'perfix' => 'mips_'
 );
 ?>
