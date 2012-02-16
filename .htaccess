@@ -1,0 +1,3 @@
+Options -Indexes
+RewriteEngine on
+RewriteRule ^([a-z]+)$ index.php?act=$1 [L,NC,QSA]
