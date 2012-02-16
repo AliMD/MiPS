@@ -1,6 +1,7 @@
 <?php
 defined('_CORE') or die('Access Restricted.');
 
+
 require_once('view.php');
 require_once('module.php');
 
