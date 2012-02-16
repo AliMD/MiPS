@@ -1,4 +1,4 @@
-	<?php
+<?php
 defined('_CORE') or die('Access Restricted.');
 
 require_once('db.php');
@@ -102,4 +102,3 @@ function reg_stats($arr){
 function finalize(){
 	db_close();
 }
-?>

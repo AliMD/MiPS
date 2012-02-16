@@ -106,4 +106,3 @@ if($act=='track'){
 }
 
 finalize();
-?>

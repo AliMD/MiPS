@@ -19,4 +19,3 @@ $db = array(
 	'pass'	=>	'',
 	'perfix' => 'mips_'
 );
-?>
