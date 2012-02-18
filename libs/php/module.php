@@ -118,8 +118,9 @@ function update_guest($gid,$uarr){
 
 function reg_device($arr){
 	global $db;
-	$date=get_date();
-	db_query("INSERT INTO $db[prefix]devices VALUES(NULL,'$arr[user_id]','$arr[uuid]','$arr[device_name]','$arr[platform_name]','$arr[platform_version]','$arr[screen_width]','$arr[screen_height]','$arr[avail_width]','$arr[avail_height]','$arr[color_depth]','$arr[user_agent]','$arr[language]','$date',NULL)");
+	$date = get_date();
+	$arr = ready2insert($arr);
+	db_query("INSERT INTO $db[prefix]devices($arr[keys],reg_date) VALUES($arr[vals],'$date')");
 }
 
 function get_update_arr($input_arr,$avail_arr,$waived_arr){
@@ -142,6 +143,19 @@ function update_table($table,$arr,$whr){
 		$text.="$key='$val'";
 	}
 	db_query("UPDATE $table SET $text WHERE $whr");
+}
+
+function ready2insert($arr){
+	$key_str=$val_str='';
+	foreach($arr as $key=>$val){
+		if($key_str!=''){
+			$key_str.=',';
+			$val_str.=',';
+		}
+		$key_str.="$key";
+		$val_str.="'$val'";
+	}
+	return array('keys'=>$key_str,'vals'=>$val_str);
 }
 
 function meta_register($arr){
@@ -186,16 +200,8 @@ function meta_logout(){
 
 function insert_analytics($arr){
 	global $db;
-	$key_str=$val_str='';
-	foreach($arr as $key=>$val){
-		if($key_str!=''){
-			$key_str.=',';
-			$val_str.=',';
-		}
-		$key_str.="$key";
-		$val_str.="'$val'";
-	}
-	db_query("INSERT INTO $db[prefix]analytics($key_str) VALUES($val_str)");
+	$arr = ready2insert($arr);
+	db_query("INSERT INTO $db[prefix]analytics($arr[keys]) VALUES($arr[vals])");
 }
 
 function finalize(){

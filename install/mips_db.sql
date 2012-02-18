@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Feb 16, 2012 at 02:38 PM
+-- Generation Time: Feb 18, 2012 at 08:14 PM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -33,10 +33,9 @@ CREATE TABLE IF NOT EXISTS `mips_analytics` (
   `client_ip` varchar(16) NOT NULL,
   `meta_name` text NOT NULL COMMENT 'some action or event',
   `meta_content` varchar(100) NOT NULL COMMENT 'action or event data',
-  `reg_date` datetime NOT NULL DEFAULT '1970-00-00 00:00:00' COMMENT 'On Register',
   `last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Auto update',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
 -- Dumping data for table `mips_analytics`
