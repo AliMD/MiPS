@@ -8,7 +8,7 @@ function initialize(){
 	session_start();
 }
 
-class validate {
+class validate {	//TODO: complete and test!
 	public function name($str){
 		return preg_replace("/[\\\[\]<>~`\!\@\#\$%\^&\*()_=\+\|}{\"\'\:;\/\?\.0-9,-]*/",'',trim($str));
 	}
@@ -23,8 +23,8 @@ class validate {
 	}
 }
 
-function get_date(){
-	return date('Y-m-d H:i:s', time());;
+function get_inputs($method,$arr){
+	return escape_arr(filter_input_array($method,$arr));	
 }
 
 function escape_arr($arr){
@@ -34,69 +34,168 @@ function escape_arr($arr){
 	return $arr;
 }
 
-function check_in_table($table,$param,$var){	// returns 1 if $param with $var value exists.
-	$check = db_query("SELECT id FROM $table WHERE $param='$var'");
+function get_field($field,$arr=NULL){
+	if(is_array($field) && $arr==NULL){	// calling get_field() without assigning $field parameter, will return 'ID'-index of input array
+		$arr = $field;
+		$field = 'id';
+	}
+	foreach($arr as $val){
+		$data ="$val[$field]";	// $data = value of the last index
+	}							// $arr[0]['id'] for single-indexed array
+	return $data;
+}
+
+function get_app_id($track_code){
+	global $db;
+	return get_field(db_get_rows($db['prefix'].'applications',"track_code='$track_code'"));	// default field: ID
+}
+
+function get_device_id($arr){
+	global $db;
+	if(check_in_table($db['prefix'].'devices',"uuid='$arr[uuid]'")){
+		update_device($arr);
+	}else{
+		reg_guest($arr['uuid']);
+		$arr['user_id'] = get_field(db_get_rows($db['prefix'].'users',"name REGEXP '$arr[uuid]'"));	// default field: ID
+		reg_device($arr);
+	}
+	return get_field(db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'"));	// return device ID [id column in PREFIX.devices table]
+}
+
+function get_user_id($device_id){
+	return get_field('user_id',db_get_rows($db['prefix'].'devices',"id='$device_id'"));
+}
+
+function get_date(){
+	return date('Y-m-d H:i:s', time());;
+}
+
+function check_in_table($table,$whr){	// returns 1 if $param with $var value exists.
+	$check = db_query("SELECT id FROM $table WHERE $whr");
 	return @mysql_num_rows($check)!=0;
 }
 
-function reg_user($arr){
+function reg_guest($uuid){
+	global $db;
 	$date=get_date();
-	$arr['password']=md5($arr['password']);
-	db_query("INSERT INTO mips_users VALUES(NULL,'$arr[name]','$arr[nickname]','$arr[email]','$arr[password]','$arr[cellphone]','$date',NULL)");
+	db_query("INSERT INTO $db[prefix]users(name,reg_date) VALUES('guest_$uuid','$date')");
 }
 
 function update_user($arr){
+	global $db;
+	//$arr['user_id']=get_field(db_get_rows($db['prefix'].'users',"name REGEXP '$arr[uuid]'"));
 	$arr['password']=md5($arr['password']);
-	db_query("UPDATE mips_users SET name='$arr[name]',nickname='$arr[nickname]',password='$arr[password]',email='$arr[email]',cellphone='$arr[cellphone]' WHERE id='$arr[user_id]' AND name='guest'");
-}
-
-function reg_guest($arr){
-	db_query("INSERT INTO mips_users(device_id,username) VALUES('$arr[device_id]','guest')");
-}
-
-function reg_device($arr){
-	db_query("INSERT INTO mips_devices VALUES(NULL,'$arr[user_id]','$arr[device_id]','$arr[device_name]','$arr[platform_name]','$arr[platform_version]','$arr[screen_width]','$arr[screen_height]','$arr[avail_width]','$arr[avail_height]','$arr[color_depth]','$arr[user_agent]','$arr[language]',NULL)");
-}
-
-/*
-function device_update_needed($input_arr,$avail_arr){
-	$ret=0;
-	foreach($avail_arr[0] as $key=>$val){	// $avail_arr[0] = array('id'=>'','user_id'=>'', ... , 'reg_time'=>'') [db_get_rows() single-indexed output array]
-		if($key=='id' || $key=='reg_time') continue;	// maybe for user_id or device_id (?)
-		if($val != $input_arr[$key]) $ret=1;			 			
-	}
-	return $ret;	
+	
+	$waived_arr = array('id','reg_date','last_update');
+	// Non-Updateable Columns in PREFIX.users table. 'last_update' column will be changed automatically by MySQL.
+		
+	$update_arr = get_update_arr($arr,db_get_rows($db['prefix'].'users',"id='$_SESSION[user_id]'"),$waived_arr);
+	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
+		
+	if($update_arr)	update_table($db['prefix'].'users',$update_arr,"id='$_SESSION[user_id]'"); // check if $update_arr is an array, or FALSE
 }
 
 function update_device($arr){
-	db_query("UPDATE devices SET device_id='$arr[device_id]',device_name='$arr[device_name]',platform_name='$arr[platform_name]',platform_version='$arr[platform_version]',screen_width='$arr[screen_width]',screen_height='$arr[screen_height]',avail_width='$arr[avail_width]',avail_height='$arr[avail_height]',color_depth='$arr[color_depth]',user_agent='$arr[user_agent]',language='$arr[language]' WHERE user_id='$arr[user_id]'");
+	global $db;
+	$waived_arr = array('id','user_id','uuid','reg_date','last_update');
+	// Non-Updateable Columns in PREFIX.devices table. 'last_update' column will be changed automatically by MySQL.
+	
+	$update_arr = get_update_arr($arr,db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'"),$waived_arr);
+	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
+	
+	if($update_arr)	update_table($db['prefix'].'devices',$update_arr,"uuid='$arr[uuid]'"); // check if $update_arr is an array, or FALSE
 }
-*/
 
-function get_update_arr($input_arr,$avail_arr){
+function update_guest($gid,$uarr){
+	$waived_arr = array('id','reg_date','last_update');
+	// Non-Updateable Columns in PREFIX.users table. 'last_update' column will be changed automatically by MySQL.
+	
+	$update_arr = get_update_arr($uarr,db_get_rows($db['prefix'].'users',"id='$gid'"),$waived_arr);
+	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
+	
+	update_table($db['prefix'].'users',$update_arr,"id='$gid'"); // check if $update_arr is an array, or FALSE
+}
+
+function reg_device($arr){
+	global $db;
+	$date=get_date();
+	db_query("INSERT INTO $db[prefix]devices VALUES(NULL,'$arr[user_id]','$arr[uuid]','$arr[device_name]','$arr[platform_name]','$arr[platform_version]','$arr[screen_width]','$arr[screen_height]','$arr[avail_width]','$arr[avail_height]','$arr[color_depth]','$arr[user_agent]','$arr[language]','$date',NULL)");
+}
+
+function get_update_arr($input_arr,$avail_arr,$waived_arr){
 	$res=array();
 	foreach($avail_arr[0] as $key=>$val){	// $avail_arr[0] = array('id'=>'','user_id'=>'', ... , 'reg_time'=>'') [db_get_rows() single-indexed output array]
-		if($key=='id' || $key=='reg_time') continue;	// maybe for user_id or device_id (?)
+		if(in_array($key,$waived_arr)) continue;	// waive all the 'key's exist in '$waive_arr' as a value
 		if($val != $input_arr[$key]) $res[$key]=$input_arr[$key];			 			
 	}
 	return (count($res)>0)?$res:false;	
-}
-
-function update_device($arr,$whr){
-	$text='';
-	foreach($arr as $key=>$val){
-		if($text!='') $text.=',';
-		$text.="$key='$val'";
-	}
-	db_query("UPDATE mips_devices SET $text WHERE $whr");
 }
 
 function get_client_ip(){
 	return isset($_SERVER["HTTP_X_FORWARDED_FOR"])?$_SERVER["HTTP_X_FORWARDED_FOR"]:$_SERVER['REMOTE_ADDR'];
 }
 
-function reg_stats($arr){
-	db_query("INSERT INTO mips_analytics VALUES(NULL,'$arr[user_id]','$arr[device_id]','$arr[app_id]','$arr[client_ip]','$arr[meta_name]','$arr[meta_content]',NULL)");
+function update_table($table,$arr,$whr){
+	$text='';
+	foreach($arr as $key=>$val){
+		if($text!='') $text.=',';
+		$text.="$key='$val'";
+	}
+	db_query("UPDATE $table SET $text WHERE $whr");
+}
+
+function meta_register($arr){
+	update_user($arr);	// update if needed automatically.
+	check_login() or user_exists($arr) and login();	
+}
+
+function login(){
+	$_SESSION['login']=1;
+}
+
+function check_login(){
+	return $_SESSION['login']==1;
+}
+
+function user_exists($arr){
+	global $db;
+	$arr['password']=md5($arr['password']);
+	return db_get_rows($db['prefix'].'users',"email='$arr[email]' AND password='$arr[password]'") or false;
+}
+
+function meta_login($arr){	
+	global $db;
+	$probable_guest_id = $_SESSION['user_id'];	// or get user ID from PREFIX.devices table [probable guest ID]
+	
+	if($user_arr = user_exists($arr)){
+		$user_id = $user_arr[0]['id'];
+		if($probable_guest_id != $user_id) update_guest($probable_guest_id,$user_arr);
+	}
+	check_login() or user_exists($arr) and login();
+}
+
+function logout(){
+	unset($_SESSION['login']);
+	setcookie(session_name(),'',-1);	// 1sec ago (past time to clear cookie)
+	session_destroy();					// ???
+}
+
+function meta_logout(){
+	logout();
+}
+
+function insert_analytics($arr){
+	global $db;
+	$key_str=$val_str='';
+	foreach($arr as $key=>$val){
+		if($key_str!=''){
+			$key_str.=',';
+			$val_str.=',';
+		}
+		$key_str.="$key";
+		$val_str.="'$val'";
+	}
+	db_query("INSERT INTO $db[prefix]analytics($key_str) VALUES($val_str)");
 }
 
 function finalize(){

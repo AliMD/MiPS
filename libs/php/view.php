@@ -27,12 +27,3 @@ function doDie($data=NULL){
 	if(isset($data)) send_msg($data);
 	die();
 }
-
-function get_field($arr,$field){
-	$field = $field or 'id';
-	foreach($arr as $val){
-		$data ="$val[$field]";	// $data = value of the last index
-	}						// $arr[0]['id'] for single-indexed array
-	return $data;
-}
-?>

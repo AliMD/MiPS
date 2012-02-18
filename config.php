@@ -17,5 +17,5 @@ $db = array(
 	'name'	=>	'mips_db',
 	'user'	=>	'root',
 	'pass'	=>	'',
-	'perfix' => 'mips_'
+	'prefix' => 'mips_'
 );
