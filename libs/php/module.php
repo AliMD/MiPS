@@ -191,7 +191,7 @@ function meta_login($arr){
 function logout(){
 	unset($_SESSION['login']);
 	setcookie(session_name(),'',-1);	// 1sec ago (past time to clear cookie)
-	session_destroy();					// ???
+	//session_destroy();				// ???
 }
 
 function meta_logout(){

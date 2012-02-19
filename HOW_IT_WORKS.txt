@@ -1,0 +1,48 @@
+﻿===================================================
+==	MiPS (Mobile Information Proccessing System) Instructions:           ==
+===================================================
+
+sending device information to MiPS Server has some steps which expressed below:
+
+1) by running application (which has been registered to MiPS Server), these parameters are sent (GET or POST):
+http://mips-server/track?
+	track_code	= ...	&	(application unique identification parameter, auto-created)
+	uuid		= ...	&	(device unique identification parameter)
+	device_name	= ...	&
+	platform_name	= ...	&
+	platform_version	= ...	&
+	screen_width	= ...	&
+	screen_height	= ...	&
+	avail_width	= ...	&
+	avail_height	= ...	&
+	color_depth	= ...	&
+	user_agent	= ...	&
+	language		= ...	&
+	meta_name	= ...	&	(event or action name)
+	meta_content	= ...		(event or action description) [if needed]
+
+by sending these parameters, MiPS registers the device and user as a guest. and It'll update device informations if needed.
+
+2) for registering a (real) user, these parameters have to be sent:
+http://mips-server/track?
+	name		= ...		&
+	nickname		= ...		&	(nickname = nickname || name)
+	email		= ...		&	(will be used as username)
+	password		= ...		&
+	cellphone		= ...		&
+	meta_name	= register	&	[Necessay]
+	meta_content	= ...			(description) [if needed]
+
+by sending these parameters, MiPS updates guest (registered before) as a user, and login.
+
+3) updating the guest informations registered by the device, by logging in as another user, will be done by sending these parameters:
+http://mips-server/track?
+	email		= ...		&	(will be used as username)
+	password		= ...		&
+	meta_name	= login		&	[Necessay]
+	meta_content	= ...			(description) [if needed]
+
+by sending these parameters, MiPS checks users table to update "probable guest", and login.
+
+4) Loggin out a user:
+http://mips-server/track?meta_name=logout

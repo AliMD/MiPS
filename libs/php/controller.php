@@ -64,7 +64,7 @@ if($act=='track'){
 		'email'			=>	$track_arr['email'],
 		'password'		=>	$track_arr['password'],
 		'cellphone'		=>	$track_arr['cellphone']
-	));	// update guest (registered befor) as a user, and login.
+	));	// update guest (registered before) as a user, and login.
 	
 	if($track_arr['meta_name']=='login')	meta_login(array(
 		'email'			=>	$track_arr['email'],
