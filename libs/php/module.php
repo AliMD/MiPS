@@ -63,6 +63,7 @@ function get_device_id($arr){
 }
 
 function get_user_id($device_id){
+	global $db;
 	return get_field('user_id',db_get_rows($db['prefix'].'devices',"id='$device_id'"));
 }
 
@@ -102,17 +103,18 @@ function update_device($arr){
 	
 	$update_arr = get_update_arr($arr,db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'"),$waived_arr);
 	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
-	
+
 	if($update_arr)	update_table($db['prefix'].'devices',$update_arr,"uuid='$arr[uuid]'"); // check if $update_arr is an array, or FALSE
 }
 
 function update_guest($gid,$uarr){
+	global $db;
 	$waived_arr = array('id','reg_date','last_update');
 	// Non-Updateable Columns in PREFIX.users table. 'last_update' column will be changed automatically by MySQL.
 	
 	$update_arr = get_update_arr($uarr,db_get_rows($db['prefix'].'users',"id='$gid'"),$waived_arr);
 	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
-	
+
 	update_table($db['prefix'].'users',$update_arr,"id='$gid'"); // check if $update_arr is an array, or FALSE
 }
 
@@ -174,7 +176,7 @@ function check_login(){
 function user_exists($arr){
 	global $db;
 	$arr['password']=md5($arr['password']);
-	return db_get_rows($db['prefix'].'users',"email='$arr[email]' AND password='$arr[password]'") or false;
+	return db_get_rows($db['prefix'].'users',"email='$arr[email]' AND password='$arr[password]'");
 }
 
 function meta_login($arr){	
@@ -183,7 +185,7 @@ function meta_login($arr){
 	
 	if($user_arr = user_exists($arr)){
 		$user_id = $user_arr[0]['id'];
-		if($probable_guest_id != $user_id) update_guest($probable_guest_id,$user_arr);
+		if($probable_guest_id != $user_id) update_guest($probable_guest_id,$user_arr[0]);
 	}
 	check_login() or user_exists($arr) and login();
 }
@@ -191,7 +193,7 @@ function meta_login($arr){
 function logout(){
 	unset($_SESSION['login']);
 	setcookie(session_name(),'',-1);	// 1sec ago (past time to clear cookie)
-	//session_destroy();				// ???
+	session_destroy();
 }
 
 function meta_logout(){

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Feb 18, 2012 at 08:14 PM
+-- Generation Time: Feb 19, 2012 at 07:28 PM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `mips_analytics` (
 
 CREATE TABLE IF NOT EXISTS `mips_applications` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'app unique id',
-  `track_code` int(11) NOT NULL COMMENT 'track unique id',
+  `track_code` int(10) NOT NULL COMMENT 'track unique id',
   `app_name` varchar(16) NOT NULL COMMENT 'app unique name ',
   `app_version` varchar(16) NOT NULL,
   `authors` varchar(100) NOT NULL,
