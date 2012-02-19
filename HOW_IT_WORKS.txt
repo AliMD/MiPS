@@ -6,20 +6,20 @@ sending device information to MiPS Server has some steps which expressed below:
 
 1) by running application (which has been registered to MiPS Server), these parameters are sent (GET or POST):
 http://mips-server/track?
-	track_code	= ...	&	(application unique identification parameter, auto-created)
-	uuid		= ...	&	(device unique identification parameter)
-	device_name	= ...	&
-	platform_name	= ...	&
-	platform_version	= ...	&
-	screen_width	= ...	&
-	screen_height	= ...	&
-	avail_width	= ...	&
-	avail_height	= ...	&
-	color_depth	= ...	&
-	user_agent	= ...	&
-	language		= ...	&
-	meta_name	= ...	&	(event or action name)
-	meta_content	= ...		(event or action description) [if needed]
+	track_code	= ...	&	[once]	(application unique identification parameter, auto-created)	
+	uuid		= ...	&	[once]	(device unique identification parameter)
+	device_name	= ...	&	[once]
+	platform_name	= ...	&	[once]
+	platform_version	= ...	&	[once]
+	screen_width	= ...	&	[once]
+	screen_height	= ...	&	[once]
+	avail_width	= ...	&	[once]
+	avail_height	= ...	&	[once]
+	color_depth	= ...	&	[once]
+	user_agent	= ...	&	[once]
+	language		= ...	&	[once]
+	meta_name	= ...	&	[EVERY TIME]	(event or action name)
+	meta_content	= ...		[EVERY TIME]	(event or action description) [if needed]
 
 by sending these parameters, MiPS registers the device and user as a guest. and It'll update device informations if needed.
 
