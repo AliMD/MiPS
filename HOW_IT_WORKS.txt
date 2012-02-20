@@ -1,45 +1,45 @@
-﻿===================================================
+﻿===========================================================================
 ==	MiPS (Mobile Information Proccessing System) Instructions:           ==
-===================================================
+===========================================================================
 
 sending device information to MiPS Server has some steps which expressed below:
 
 1) by running application (which has been registered to MiPS Server), these parameters are sent (GET or POST):
 http://mips-server/track?
-	track_code	= ...	&	[once]	(application unique identification parameter, auto-created)	
-	uuid		= ...	&	[once]	(device unique identification parameter)
-	device_name	= ...	&	[once]
-	platform_name	= ...	&	[once]
+	track_code			= ...	&	[once]	(application unique identification parameter, auto-created)	
+	uuid				= ...	&	[once]	(device unique identification parameter)
+	device_name			= ...	&	[once]
+	platform_name		= ...	&	[once]
 	platform_version	= ...	&	[once]
-	screen_width	= ...	&	[once]
-	screen_height	= ...	&	[once]
-	avail_width	= ...	&	[once]
-	avail_height	= ...	&	[once]
-	color_depth	= ...	&	[once]
-	user_agent	= ...	&	[once]
-	language		= ...	&	[once]
-	meta_name	= ...	&	[EVERY TIME]	(event or action name)
-	meta_content	= ...		[EVERY TIME]	(event or action description) [if needed]
+	screen_width		= ...	&	[once]
+	screen_height		= ...	&	[once]
+	avail_width			= ...	&	[once]
+	avail_height		= ...	&	[once]
+	color_depth			= ...	&	[once]
+	user_agent			= ...	&	[once]
+	language			= ...	&	[once]
+	meta_name			= ...	&	[EVERY TIME]	(event or action name)
+	meta_content		= ...		[EVERY TIME]	(event or action description) [if needed]
 
 by sending these parameters, MiPS registers the device and user as a guest. and It'll update device informations if needed.
 
 2) for registering a (real) user, these parameters have to be sent:
 http://mips-server/track?
-	name		= ...		&
+	name			= ...		&
 	nickname		= ...		&	(nickname = nickname || name)
-	email		= ...		&	(will be used as username)
+	email			= ...		&	(will be used as username)
 	password		= ...		&
 	cellphone		= ...		&
-	meta_name	= register	&	[Necessay]
+	meta_name		= register	&	[Necessay]
 	meta_content	= ...			(description) [if needed]
 
 by sending these parameters, MiPS updates guest (registered before) as a user, and login.
 
 3) updating the guest informations registered by the device, by logging in as another user, will be done by sending these parameters:
 http://mips-server/track?
-	email		= ...		&	(will be used as username)
+	email			= ...		&	(will be used as username)
 	password		= ...		&
-	meta_name	= login		&	[Necessay]
+	meta_name		= login		&	[Necessay]
 	meta_content	= ...			(description) [if needed]
 
 by sending these parameters, MiPS checks users table to update "probable guest", and login.

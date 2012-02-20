@@ -75,7 +75,12 @@ if($act=='track'){
 	if($track_arr['meta_name']=='login')	meta_login(array(
 		'email'			=>	$track_arr['email'],
 		'password'		=>	$track_arr['password']
-	));	// check users table for update probable guest, and login.
+	));	
+	/*
+	*	check email and password in users table,
+	*	if user exists, remove guest from users table, update user_id in devices an analytics table, change user_id SESSION.
+	*	do login anyway.
+	*/
 	
 	if($track_arr['meta_name']=='logout')	meta_logout();	// logout user.
 		

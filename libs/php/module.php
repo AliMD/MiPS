@@ -107,15 +107,19 @@ function update_device($arr){
 	if($update_arr)	update_table($db['prefix'].'devices',$update_arr,"uuid='$arr[uuid]'"); // check if $update_arr is an array, or FALSE
 }
 
-function update_guest($gid,$uarr){
+// TODO: update db functions, get "DB Error #1064" when executing multiple queries; WHY ?????
+function change_guest($gid,$uarr){
 	global $db;
-	$waived_arr = array('id','reg_date','last_update');
-	// Non-Updateable Columns in PREFIX.users table. 'last_update' column will be changed automatically by MySQL.
-	
-	$update_arr = get_update_arr($uarr,db_get_rows($db['prefix'].'users',"id='$gid'"),$waived_arr);
-	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
-
-	update_table($db['prefix'].'users',$update_arr,"id='$gid'"); // check if $update_arr is an array, or FALSE
+	db_query("DELETE FROM $db[prefix]users WHERE id='$gid';");
+	db_query("UPDATE $db[prefix]devices SET user_id='$uarr[id]' WHERE user_id='$gid';");
+	db_query("UPDATE $db[prefix]analytics SET user_id='$uarr[id]' WHERE user_id='$gid';");
+	$_SESSION['user_id']=$uarr['id'];
+	/*	
+	*	remove guest from users database
+	*	update user_id in devices table
+	*	update user_id in analytics table
+	*	update $_SESSION['user_id']
+	*/
 }
 
 function reg_device($arr){
@@ -185,7 +189,7 @@ function meta_login($arr){
 	
 	if($user_arr = user_exists($arr)){
 		$user_id = $user_arr[0]['id'];
-		if($probable_guest_id != $user_id) update_guest($probable_guest_id,$user_arr[0]);
+		if($probable_guest_id != $user_id) change_guest($probable_guest_id,$user_arr[0]);
 	}
 	check_login() or user_exists($arr) and login();
 }
