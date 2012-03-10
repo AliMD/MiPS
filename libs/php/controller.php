@@ -30,7 +30,10 @@ $track_validate = array(
 	'meta_content' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ) //TODO: test!
 );
 
-if($act=='track'){
+
+if($act=='add_app'){
+	// TODO: add app to db from a form template page .
+}else if($act=='track'){
 	
 	/*
 	 *	IMPORTANT:
@@ -58,21 +61,23 @@ if($act=='track'){
 		'user_agent'		=>	$track_arr['user_agent'],
 		'language'			=>	$track_arr['language'],
 	))); // insert device and user, update device if needed.
+	// tanx for dont masmalizing :D, remove after read.
 	
 	$user_id = isset($_SESSION['user_id'])?$_SESSION['user_id']:($_SESSION['user_id']=get_user_id($device_id));
 	// set session for lateral using.
 	
 	$client_ip = get_client_ip();
 	
-	if($track_arr['meta_name']=='register')	meta_register(array(
+	$track_arr['meta_name']=='register' && meta_register(array(
 		'name'			=>	$track_arr['name'],
 		'nickname'		=>	$track_arr['nickname'],
 		'email'			=>	$track_arr['email'],
 		'password'		=>	$track_arr['password'],
 		'cellphone'		=>	$track_arr['cellphone']
 	));	// update guest (registered before) as a user, and login.
+	//why use meta ? user_register or user_login maybe better ?!
 	
-	if($track_arr['meta_name']=='login')	meta_login(array(
+	$track_arr['meta_name']=='login' && meta_login(array(
 		'email'			=>	$track_arr['email'],
 		'password'		=>	$track_arr['password']
 	));	
@@ -83,7 +88,8 @@ if($act=='track'){
 	*/
 	
 	if($track_arr['meta_name']=='logout')	meta_logout();	// logout user.
-		
+	
+	//TODO: dont insert everything !
 	insert_analytics(array(
 		'user_id'		=>	$_SESSION['user_id'],
 		'device_id'		=>	$_SESSION['device_id'],
@@ -93,8 +99,6 @@ if($act=='track'){
 		'meta_content'	=>	$track_arr['meta_content']
 	));
 
-}else if($act=='add_app'){
-	// TODO: ...	
 }
 
 finalize();
