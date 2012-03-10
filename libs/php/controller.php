@@ -26,6 +26,7 @@ $track_validate = array(
 	'user_agent' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'language' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'track_code' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
+	'skip_analytic' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::boolian' ),
 	'meta_name' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'meta_content' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ) //TODO: test!
 );
@@ -33,7 +34,7 @@ $track_validate = array(
 
 if($act=='add_app'){
 	// TODO: add app to db from a form template page .
-}else if($act=='track'){
+}else if($act=='track'){ 
 	
 	/*
 	 *	IMPORTANT:
@@ -68,7 +69,7 @@ if($act=='add_app'){
 	
 	$client_ip = get_client_ip();
 	
-	$track_arr['meta_name']=='register' && meta_register(array(
+	$track_arr['meta_name']=='register' and meta_register(array(
 		'name'			=>	$track_arr['name'],
 		'nickname'		=>	$track_arr['nickname'],
 		'email'			=>	$track_arr['email'],
@@ -77,7 +78,7 @@ if($act=='add_app'){
 	));	// update guest (registered before) as a user, and login.
 	//why use meta ? user_register or user_login maybe better ?!
 	
-	$track_arr['meta_name']=='login' && meta_login(array(
+	$track_arr['meta_name']=='login' and meta_login(array(
 		'email'			=>	$track_arr['email'],
 		'password'		=>	$track_arr['password']
 	));	
@@ -87,10 +88,14 @@ if($act=='add_app'){
 	*	do login anyway.
 	*/
 	
-	if($track_arr['meta_name']=='logout')	meta_logout();	// logout user.
+	$track_arr['meta_name']=='logout' and meta_logout();	// logout user.
 	
-	//TODO: dont insert everything !
-	insert_analytics(array(
+	$track_arr['meta_name']=='comment' and meta_comment($track_arr['meta_content']); // TODO: insert comment in db (meta_content is "tag=3&comment=blabla")
+	
+	$track_arr['meta_name']=='comment_rate' and meta_comment_rate($track_arr['meta_content']); // TODO: add rate +1 or -1 to comment (meta_content is "id=123&rate=-1")
+	
+	// client can insert_analytics log by skip_analytic=1 (for example for login and logout or comment)
+	$track_arr['skip_analytic'] or insert_analytics(array(
 		'user_id'		=>	$_SESSION['user_id'],
 		'device_id'		=>	$_SESSION['device_id'],
 		'app_id'		=>	$_SESSION['app_id'],
@@ -98,7 +103,18 @@ if($act=='add_app'){
 		'meta_name'		=>	$track_arr['meta_name'],
 		'meta_content'	=>	$track_arr['meta_content']
 	));
+	
+	//echo json data to app
 
+}else if($act=='get_comment'){ 
+	
+	$track_validate = array(
+		'alt_where' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ), // && width sql where.
+		'skip' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::name' ),
+		'limit' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::name' )
+	);
+	
+	// echo json comment list to app
 }
 
 finalize();
