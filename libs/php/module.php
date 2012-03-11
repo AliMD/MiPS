@@ -18,6 +18,9 @@ class validate {	//TODO: complete and test!
 	public function tel($str){
 		return preg_replace("/[\\\[\]~`!\@\#\$%\^&\*_=\|}{\"\'\:;\/\?\.\\,a-wyz ]*/",'',trim($str));
 	}
+	public function boolian($str){
+		return !!$str;
+	}
 	public function test($str){
 		return $str;
 	}

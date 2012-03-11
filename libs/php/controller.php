@@ -90,7 +90,7 @@ if($act=='add_app'){
 	
 	$track_arr['meta_name']=='logout' and meta_logout();	// logout user.
 	
-	$track_arr['meta_name']=='comment' and meta_comment($track_arr['meta_content']); // TODO: insert comment in db (meta_content is "tag=3&comment=blabla")
+	$track_arr['meta_name']=='comment' and meta_comment($track_arr['meta_content']); // TODO: insert comment in db (meta_content is "tag=1+3&comment=blabla")
 	
 	$track_arr['meta_name']=='comment_rate' and meta_comment_rate($track_arr['meta_content']); // TODO: add rate +1 or -1 to comment (meta_content is "id=123&rate=-1")
 	
@@ -106,15 +106,22 @@ if($act=='add_app'){
 	
 	//echo json data to app
 
-}else if($act=='get_comment'){ 
+}else if($act=='read_db'){ 
 	
-	$track_validate = array(
-		'alt_where' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ), // && width sql where.
-		'skip' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::name' ),
-		'limit' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::name' )
+	$read_db_validate = array(
+		'from' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
+		'alt_where' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ), // && with sql where.
+		'skip' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
+		'limit' => array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' )
 	);
 	
+	$read_db_arr = get_inputs(INPUT_GET,$track_validate);
+	
+	if($read_db_arr['from']=='comment'){
+		
+	}
 	// echo json comment list to app
+	
 }
 
 finalize();
