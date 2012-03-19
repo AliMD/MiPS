@@ -18,7 +18,7 @@ class validate {	//TODO: complete and test!
 	public function tel($str){
 		return preg_replace("/[\\\[\]~`!\@\#\$%\^&\*_=\|}{\"\'\:;\/\?\.\\,a-wyz ]*/",'',trim($str));
 	}
-	public function boolian($str){
+	public function Boolean($str){
 		return !!$str;
 	}
 	public function test($str){
@@ -56,13 +56,20 @@ function get_app_id($track_code){
 function get_device_id($arr){
 	global $db;
 	if(check_in_table($db['prefix'].'devices',"uuid='$arr[uuid]'")){
-		update_device($arr);
+		$device_id = update_device($arr);
 	}else{
-		reg_guest($arr['uuid']);
-		$arr['user_id'] = get_field(db_get_rows($db['prefix'].'users',"name REGEXP '$arr[uuid]'"));	// default field: ID
-		reg_device($arr);
+		$arr['user_id'] = reg_guest();
+		$device_id = reg_device($arr);
 	}
-	return get_field(db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'"));	// return device ID [id column in PREFIX.devices table]
+
+	return $device_id;	// return device ID [id column in PREFIX.devices table]
+}
+
+function reg_guest(){
+	global $db;
+	$date=get_date();
+	db_query("INSERT INTO $db[prefix]users(name,reg_date) VALUES('guest','$date')");
+	return mysql_insert_id();
 }
 
 function get_user_id($device_id){
@@ -71,18 +78,12 @@ function get_user_id($device_id){
 }
 
 function get_date(){
-	return date('Y-m-d H:i:s', time());;
+	return date('Y-m-d H:i:s', time());
 }
 
 function check_in_table($table,$whr){	// returns 1 if $param with $var value exists.
 	$check = db_query("SELECT id FROM $table WHERE $whr");
 	return @mysql_num_rows($check)!=0;
-}
-
-function reg_guest($uuid){
-	global $db;
-	$date=get_date();
-	db_query("INSERT INTO $db[prefix]users(name,reg_date) VALUES('guest_$uuid','$date')");
 }
 
 function update_user($arr){
@@ -101,13 +102,17 @@ function update_user($arr){
 
 function update_device($arr){
 	global $db;
+	$device_arr = db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'");
+	
 	$waived_arr = array('id','user_id','uuid','reg_date','last_update');
 	// Non-Updateable Columns in PREFIX.devices table. 'last_update' column will be changed automatically by MySQL.
 	
-	$update_arr = get_update_arr($arr,db_get_rows($db['prefix'].'devices',"uuid='$arr[uuid]'"),$waived_arr);
+	$update_arr = get_update_arr($arr,$device_arr,$waived_arr);
 	// comparing two array and returning their difference as a new array BUT WAIVE all the 'KEY's exist in '$waived_arr' as a value.
 
 	if($update_arr)	update_table($db['prefix'].'devices',$update_arr,"uuid='$arr[uuid]'"); // check if $update_arr is an array, or FALSE
+	
+	return $device_arr[0]['id'];
 }
 
 // TODO: update db functions, get "DB Error #1064" when executing multiple queries; WHY ?????
@@ -130,6 +135,7 @@ function reg_device($arr){
 	$date = get_date();
 	$arr = ready2insert($arr);
 	db_query("INSERT INTO $db[prefix]devices($arr[keys],reg_date) VALUES($arr[vals],'$date')");
+	return mysql_insert_id();
 }
 
 function get_update_arr($input_arr,$avail_arr,$waived_arr){
@@ -192,7 +198,7 @@ function meta_login($arr){
 	
 	if($user_arr = user_exists($arr)){
 		$user_id = $user_arr[0]['id'];
-		if($probable_guest_id != $user_id) change_guest($probable_guest_id,$user_arr[0]);
+		($probable_guest_id != $user_id) and change_guest($probable_guest_id,$user_arr[0]);
 	}
 	check_login() or user_exists($arr) and login();
 }
@@ -205,6 +211,72 @@ function logout(){
 
 function meta_logout(){
 	logout();
+}
+
+function str2array($str,$seperator,$inner_seperator=NULL){
+		/* ex:	$str = "reply_id=12|title=in yek title ast|comment=blah blah|tags=1,3"
+		 *		$seperator = "|";
+		 *		$inner_seperator = "=";
+		 */
+	$content_arr = explode($seperator,$str);
+		/*
+		 *	Array (
+		 *		[0] => reply_id=12
+		 *		[1] => title=this is a title
+		 *		[2] => comment=blah blah
+		 *		[3] => tags=1,3
+		 *	)
+		 */
+	if(isset($inner_seperator)) {
+		foreach($content_arr as $val){
+			$param = explode($inner_seperator,$val);	
+			$arr[$param[0]] = $param[1];		
+		}
+		/*
+		 *	Array (
+		 *		[reply_id] => 12
+		 *		[title] => this is a title
+		 *		[comment] => blah blah
+		 *		[tags] => 1,3
+		 *	)
+		 */
+	}
+	return isset($inner_seperator)?$arr:$content_arr;
+}
+
+function meta_comment($str){
+	// insert comment in db ( meta_content = reply_id=12|title=this is a title|comment=blah blah|tags=1,3 )
+	global $db;
+	$arr = str2array($str,'|','=');
+	$arr['user_id']		= $_SESSION['user_id'];
+	$arr['device_id']	= $_SESSION['device_id'];
+	$arr['app_id']		= $_SESSION['app_id'];
+	$arr['client_ip']	= $_SESSION['client_ip'];
+	
+	$arr = ready2insert($arr);
+		/*
+		 *	Array (
+		 *		[keys] => reply_id,title,comment,tags,user_id,device_id,app_id,client_ip
+   		 *		[vals] => '12','this is a title','blah blah','1,3','7','12','454','185.188.56.2'
+		 *	)
+		 */
+	db_query("INSERT INTO $db[prefix]comments($arr[keys]) VALUES($arr[vals])");
+}
+
+function meta_comment_rate($str){
+	//	update comment table, increase/decrease rate by 1, ( meta_content = id=123|rate=-1 )
+	global $db;
+	$arr = str2array($str,'|','=');
+	$arr['rate'] = $arr['rate']>0?1:-1;	// ex: if rate=-5 has been sent, set $arr['rate'] to -1
+	
+	$row = db_get_rows($db['prefix'].'comments',"id='$arr[id]'");
+	$voters_arr = explode(',',$row[0]['voters']);
+	
+	if(!in_array($_SESSION['device_id'],$voters_arr)){
+	// check voters to block duplicate ratings.
+		$SP = strlen($row[0]['voters'])>0 and ',' or '';
+		db_query("UPDATE $db[prefix]comments SET rate=rate+$arr[rate], voters=CONCAT(voters, '$SP$_SESSION[device_id]') WHERE id='$arr[id]'");
+	}
 }
 
 function insert_analytics($arr){
