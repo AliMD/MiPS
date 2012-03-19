@@ -267,13 +267,18 @@ function meta_comment_rate($str){
 	//	update comment table, increase/decrease rate by 1, ( meta_content = id=123|rate=-1 )
 	global $db;
 	$arr = str2array($str,'|','=');
-	$arr['rate'] = $arr['rate']>0?1:-1;	// ex: if rate=-5 has been sent, set $arr['rate'] to -1
 	
 	$row = db_get_rows($db['prefix'].'comments',"id='$arr[id]'");
 	$voters_arr = explode(',',$row[0]['voters']);
 	
 	if(!in_array($_SESSION['device_id'],$voters_arr)){
 	// check voters to block duplicate ratings.
+	
+		$arr['rate'] =	$arr['rate']>0	and 1	or
+						$arr['rate']==0	and 0	or
+						$arr['rate']<0	and	-1;
+		// ex: if rate=-5 has been sent, set $arr['rate'] to -1
+		
 		$SP = strlen($row[0]['voters'])>0 and ',' or '';
 		db_query("UPDATE $db[prefix]comments SET rate=rate+$arr[rate], voters=CONCAT(voters, '$SP$_SESSION[device_id]') WHERE id='$arr[id]'");
 	}
