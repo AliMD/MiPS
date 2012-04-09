@@ -5,6 +5,7 @@ require_once('view.php');
 require_once('module.php');
 
 initialize();
+$prefs = get_pref() or doDie('MiPS is unable to access preferences');
 
 $act = $_GET['act'] or doDie('Wrong action.');
 
@@ -26,7 +27,7 @@ $track_validate = array(
 	'user_agent'		=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'language'			=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'track_code'		=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
-	'skip_analytic'		=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::Boolean' ),
+	'skip_analytic'		=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::Boolean' ),	// FILTER_VALIDATE_BOOLEAN?
 	'meta_name'			=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ),
 	'meta_content'		=> array( 'filter' => FILTER_CALLBACK, 'options' => 'validate::test' ) //TODO: test!
 );

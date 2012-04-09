@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 19, 2012 at 03:24 PM
+-- Generation Time: Apr 09, 2012 at 10:36 PM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -99,6 +99,24 @@ CREATE TABLE IF NOT EXISTS `mips_comments` (
 -- Dumping data for table `mips_comments`
 --
 
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mips_core`
+--
+
+CREATE TABLE IF NOT EXISTS `mips_core` (
+  `name` varchar(16) NOT NULL DEFAULT '' COMMENT 'settings title',
+  `value` text NOT NULL COMMENT 'settings parameters'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `mips_core`
+--
+
+INSERT INTO `mips_core` (`name`, `value`) VALUES
+('mips_prefs', 'array (\r\n  ''mips_enable'' => 1,\r\n  ''comment_enable'' => 1,\r\n  ''comment_rate_enable'' => 1,\r\n  ''analytic_enable'' => 1,\r\n  ''user_reg_enable'' => 1,\r\n)');
 
 -- --------------------------------------------------------
 

@@ -8,6 +8,29 @@ function initialize(){
 	session_start();
 }
 
+function get_pref(){
+	$pref_data = new arrayData;
+	
+	$prefs_arr = db_get_rows($db['prefix'].'core',"name='mips_prefs'");
+	return $pref_data->toRead($prefs_arr[0]['value']);
+}
+
+class arrayData {
+	function toWrite($arr,$add_slashes=true){
+		if(!is_array($arr)) return false;
+		
+		$output = var_export($ArrayData, true);
+		return !!$add_slashes?addslashes($output):$output;
+	}
+	
+	function toRead($str){
+		if(strlen($str)<1) return false;	// actually: strlen($str)<=7	// "array()"
+		
+		@eval('$output='.trim($str).';');
+		return (!isset($output) || !is_array($output))?false:$output;
+	}
+}
+
 class validate {	//TODO: complete and test!
 	public function name($str){
 		return preg_replace("/[\\\[\]<>~`\!\@\#\$%\^&\*()_=\+\|}{\"\'\:;\/\?\.0-9,-]*/",'',trim($str));
@@ -213,35 +236,67 @@ function meta_logout(){
 	logout();
 }
 
-function str2array($str,$seperator,$inner_seperator=NULL){
-		/* ex:	$str = "reply_id=12|title=in yek title ast|comment=blah blah|tags=1,3"
-		 *		$seperator = "|";
-		 *		$inner_seperator = "=";
+function str2array($str,$separator,$inner_separator=NULL){
+		/* ex:	$str = "reply_id=12|title=in yek title ast|comment=blah blah|tags=1,3";
+		 *		$separator = "|";
+		 *		$inner_separator = "=";
 		 */
-	$content_arr = explode($seperator,$str);
+	$content_arr = explode($separator,$str);
 		/*
 		 *	Array (
-		 *		[0] => reply_id=12
-		 *		[1] => title=this is a title
-		 *		[2] => comment=blah blah
-		 *		[3] => tags=1,3
+		 *		[0] => 'reply_id=12'
+		 *		[1] => 'title=this is a title'
+		 *		[2] => 'comment=blah blah'
+		 *		[3] => 'tags=1,3'
 		 *	)
 		 */
-	if(isset($inner_seperator)) {
+	if(isset($inner_separator)) {
 		foreach($content_arr as $val){
-			$param = explode($inner_seperator,$val);	
+			$param = explode($inner_separator,$val);	
 			$arr[$param[0]] = $param[1];		
 		}
 		/*
 		 *	Array (
 		 *		[reply_id] => 12
-		 *		[title] => this is a title
-		 *		[comment] => blah blah
-		 *		[tags] => 1,3
+		 *		[title] => 'this is a title'
+		 *		[comment] => 'blah blah'
+		 *		[tags] => '1,3'
 		 *	)
 		 */
+		 $content_arr = $arr;
 	}
-	return isset($inner_seperator)?$arr:$content_arr;
+	return $content_arr;
+}
+
+function array2str($arr,$separator,$inner_separator=NULL){
+		/*
+		 * ex:	Array (
+		 *			[reply_id] => 12
+		 *			[title] => 'this is a title'
+		 *			[comment] => 'blah blah'
+		 *			[tags] => '1,3'
+		 *		)
+		 *		$separator = "|";
+		 *		$inner_separator = "=";
+		 */
+		
+	if(isset($inner_separator)) {
+		foreach($arr as $key=>$val){
+			$output_arr[] = $key.$inner_separator.$val;		
+		}
+		/*
+		 *	Array (
+		 *		[0] => 'reply_id=12'
+		 *		[1] => 'title=this is a title'
+		 *		[2] => 'comment=blah blah'
+		 *		[3] => 'tags=1,3'
+		 *	)
+		 */
+		 $arr = $output_arr;
+	}
+	
+	return implode($separator,$arr);
+	//	@return "reply_id=12|title=in yek title ast|comment=blah blah|tags=1,3";
 }
 
 function meta_comment($str){
@@ -267,20 +322,37 @@ function meta_comment_rate($str){
 	//	update comment table, increase/decrease rate by 1, ( meta_content = id=123|rate=-1 )
 	global $db;
 	$arr = str2array($str,'|','=');
+	$arr['rate'] =	$arr['rate']>=0	and 1	or
+					$arr['rate']<0	and	-1;
+	// ex: if rate=-5 has been sent, set $arr['rate'] to -1
 	
 	$row = db_get_rows($db['prefix'].'comments',"id='$arr[id]'");
-	$voters_arr = explode(',',$row[0]['voters']);
-	
-	if(!in_array($_SESSION['device_id'],$voters_arr)){
-	// check voters to block duplicate ratings.
-	
-		$arr['rate'] =	$arr['rate']>0	and 1	or
-						$arr['rate']==0	and 0	or
-						$arr['rate']<0	and	-1;
-		// ex: if rate=-5 has been sent, set $arr['rate'] to -1
+	$voters_arr = str2array($row[0]['voters'],',',':');
+		/*
+		 *	Array (
+		 *		[25] => 1
+		 *		[335] => -1
+		 *		[787] => -1
+		 *		[89] => 1
+		 *	)
+		 */
+	if(!array_key_exists($_SESSION['device_id'],$voters_arr)){
+	//	apply the given rate.
+		$separator = strlen($row[0]['voters'])>0 and ',' or '';
+		db_query("UPDATE $db[prefix]comments SET rate=rate+$arr[rate], voters=CONCAT(voters, '$separator$_SESSION[device_id]:$arr[rate]') WHERE id='$arr[id]'");
 		
-		$SP = strlen($row[0]['voters'])>0 and ',' or '';
-		db_query("UPDATE $db[prefix]comments SET rate=rate+$arr[rate], voters=CONCAT(voters, '$SP$_SESSION[device_id]') WHERE id='$arr[id]'");
+	}else{
+		if($voters_arr[$_SESSION['device_id']]==$arr['rate']){
+		//	remove the old given rate by sending a same rate.
+			unset($voters_arr[$_SESSION['device_id']]);
+			$rateDiff = $arr['rate'];
+		}else{
+		//	update the old given rate by sending a different rate.	
+			$voters_arr[$_SESSION['device_id']] = $arr['rate'];
+			$rateDiff = -2*$arr['rate'];
+		}
+		$voters = array2str($voters_arr,',',':');
+		db_query("UPDATE $db[prefix]comments SET rate=rate-$rateDiff, voters='$voters' WHERE id='$arr[id]'");
 	}
 }
 
