@@ -5,7 +5,7 @@ require_once('view.php');
 require_once('module.php');
 
 initialize();
-$prefs = get_pref() or doDie('MiPS is unable to access preferences');
+$prefs = get_prefs() or doDie('MiPS is unable to access preferences');
 
 $act = $_GET['act'] or doDie('Wrong action.');
 

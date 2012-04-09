@@ -8,11 +8,20 @@ function initialize(){
 	session_start();
 }
 
-function get_pref(){
-	$pref_data = new arrayData;
-	
+function get_prefs(){
+	global $db;
 	$prefs_arr = db_get_rows($db['prefix'].'core',"name='mips_prefs'");
-	return $pref_data->toRead($prefs_arr[0]['value']);
+	
+	$prefs_data = new arrayData;
+	return $prefs_data->toRead($prefs_arr[0]['value']);
+}
+
+function set_prefs($arr){
+	global $db;
+	$prefs_data = new arrayData;
+	$prefs_str = $prefs_data->toWrite($arr);
+	
+	db_query("UPDATE $db[prefix]core SET value='$prefs_str' WHERE name='mips_prefs'");
 }
 
 class arrayData {
